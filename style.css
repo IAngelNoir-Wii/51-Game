@@ -1,0 +1,142 @@
+/* =========================
+   RESET BÁSICO
+========================= */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: radial-gradient(circle at center, #0f5132, #06281f);
+  color: #fff;
+}
+
+/* =========================
+   LAYOUT GENERAL
+========================= */
+.container {
+  max-width: 1100px;
+  margin: auto;
+  padding: 20px;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+h2, h3 {
+  margin: 10px 0;
+}
+
+/* =========================
+   MANO DE CARTAS
+========================= */
+.hand {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+/* =========================
+   CARTAS
+========================= */
+.card {
+  min-width: 45px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.2);
+  text-align: center;
+  cursor: pointer;
+  background: rgba(255,255,255,0.06);
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+/* Hover */
+.card:hover {
+  transform: translateY(-5px) scale(1.05);
+  background: rgba(255,255,255,0.15);
+}
+
+/* Seleccionada */
+.card.selected {
+  background: #4caf50;
+  border: 1px solid #81c784;
+  transform: translateY(-6px) scale(1.08);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+/* =========================
+   BOTONES
+========================= */
+.controls {
+  margin-top: 15px;
+}
+
+button {
+  padding: 10px 16px;
+  margin: 6px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background: #1976d2;
+  color: white;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+button:hover {
+  background: #2196f3;
+  transform: translateY(-2px);
+}
+
+/* Botón peligro (descartar) */
+button:last-child {
+  background: #c62828;
+}
+
+button:last-child:hover {
+  background: #e53935;
+}
+
+/* =========================
+   DESCARTE
+========================= */
+.discard {
+  margin-top: 20px;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.05);
+  display: inline-block;
+}
+
+/* =========================
+   ESTADO / INFO
+========================= */
+.status {
+  margin-top: 15px;
+  padding: 10px;
+  background: rgba(0,0,0,0.2);
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 600px) {
+  .card {
+    min-width: 38px;
+    padding: 8px;
+    font-size: 14px;
+  }
+
+  button {
+    width: 100%;
+    margin: 5px 0;
+  }
+}
