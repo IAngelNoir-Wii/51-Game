@@ -20,18 +20,14 @@ function render() {
   let html = `<h2>Turno Jugador ${game.currentPlayer + 1}</h2>`;
 
   // Mano
-  html += `<h3>Mano:</h3><div>`;
-  hand.forEach((card, index) => {
-    const isSelected = selectedCards.includes(index);
-    html += `
-      <span 
-        class="card" 
-        style="background:${isSelected ? '#4caf50' : 'transparent'}"
-        onclick="toggleSelect(${index})"
-      >
-        ${card.value}${card.suit}
-      </span>
-    `;
+  html += `
+  <span 
+    class="card ${isSelected ? 'selected' : ''}"
+    onclick="toggleSelect(${index})"
+  >
+    ${card.value}${card.suit}
+  </span>
+`;
   });
   html += `</div>`;
 
