@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>51 Colombiano</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0b3d2e;
+      color: white;
+    }
+
+    .container {
+      padding: 20px;
+      max-width: 1000px;
+      margin: auto;
+    }
+
+    h1, h2, h3 {
+      margin: 10px 0;
+    }
+
+    .hand {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #ffffff55;
+      cursor: pointer;
+      transition: 0.2s;
+      background: rgba(255,255,255,0.05);
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      background: rgba(255,255,255,0.15);
+    }
+
+    .selected {
+      background: #4caf50 !important;
+      transform: scale(1.05);
+    }
+
+    .controls {
+      margin-top: 15px;
+    }
+
+    button {
+      padding: 10px 14px;
+      margin: 5px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      background: #1976d2;
+      color: white;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background: #2196f3;
+    }
+
+    .discard {
+      margin-top: 20px;
+      padding: 10px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+      display: inline-block;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>🃏 51 Colombiano</h1>
+
+    <div id="game"></div>
+  </div>
+
+  <!-- Lógica del juego -->
+  <script src="game.js"></script>
+
+  <!-- Interfaz -->
+  <script src="ui.js"></script>
+</body>
+</html>
