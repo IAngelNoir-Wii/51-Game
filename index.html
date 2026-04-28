@@ -5,20 +5,61 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>51 Colombiano</title>
 
-<link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css">
+
+  <style>
+    .start-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      gap: 10px;
+    }
+
+    .hidden { display: none; }
+
+    input {
+      padding: 10px;
+      border-radius: 6px;
+      border: none;
+      width: 200px;
+      text-align: center;
+    }
+  </style>
 </head>
 
 <body>
-  <div class="container">
+  <!-- Pantalla inicial -->
+  <div id="start" class="start-screen">
     <h1>🃏 51 Colombiano</h1>
+    <input id="playerName" placeholder="Tu nombre" />
+    <button onclick="startWithName()">Comenzar</button>
+  </div>
 
+  <!-- Juego -->
+  <div id="app" class="container hidden">
+    <h1 id="playerTitle"></h1>
     <div id="game"></div>
   </div>
 
-  <!-- Lógica del juego -->
   <script src="game.js"></script>
-
-  <!-- Interfaz -->
   <script src="ui.js"></script>
+
+  <script>
+    function startWithName() {
+      const name = document.getElementById('playerName').value.trim();
+      if (!name) return alert('Ingresa un nombre');
+
+      document.getElementById('start').classList.add('hidden');
+      document.getElementById('app').classList.remove('hidden');
+
+      document.getElementById('playerTitle').innerText = `Jugador: ${name}`;
+
+      // Forzamos que siempre se vea jugador 1
+      window.PLAYER_NAME = name;
+      startGameUI();
+    }
+  </script>
 </body>
 </html>
