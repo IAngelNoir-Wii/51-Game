@@ -7,26 +7,11 @@ let hasDrawn = false;
 let tookDiscard = false;
 let draggedIndex = null;
 
-// Mesa
 let table = [];
-
-// UX highlight
-let hoverGroupIndex = null;
+let staging = [];
 
 // =======================
-// INICIO
-// =======================
-function startGameUI() {
-  game.init();
-  selectedCards = [];
-  hasDrawn = false;
-  tookDiscard = false;
-  table = [];
-  render();
-}
-
-// =======================
-// HELPERS
+// CONFIG
 // =======================
 const ORDER = ["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
 
@@ -37,36 +22,33 @@ function cardPoints(c){
 }
 
 // =======================
-// VALIDAR PEGADO
+// VALIDACIÓN
 // =======================
-function canAttach(card, group) {
-  // SET
-  if (group.every(c => c.value === group[0].value)) {
-    return card.value === group[0].value;
-  }
+function getStagingInfo() {
+  let total = 0;
+  let valid = true;
 
-  // RUN
-  if (group.every(c => c.suit === group[0].suit)) {
-    const values = group.map(c => ORDER.indexOf(c.value)).sort((a,b)=>a-b);
-    const min = values[0];
-    const max = values[values.length - 1];
-    const cardIndex = ORDER.indexOf(card.value);
+  const details = staging.map(group => {
+    const isValid = group.length >= 3 && game.isValidCombination(group);
+    const points = group.reduce((s,c)=>s + cardPoints(c),0);
 
-    return (
-      card.suit === group[0].suit &&
-      (cardIndex === min - 1 || cardIndex === max + 1)
-    );
-  }
+    if (!isValid) valid = false;
+    total += points;
 
-  return false;
-}
+    return { isValid, points };
+  });
 
-function attachToGroup(card, groupIndex) {
-  if (canAttach(card, table[groupIndex])) {
-    table[groupIndex].push(card);
-    return true;
-  }
-  return false;
+  const minRequired = (game.lastOpenValue === 50) ? 51 : game.lastOpenValue + 1;
+
+  const meetsTotal = total >= minRequired;
+
+  return {
+    total,
+    valid: valid && meetsTotal,
+    meetsTotal,
+    minRequired,
+    details
+  };
 }
 
 // =======================
@@ -77,12 +59,59 @@ function render() {
   const hand = game.players[HUMAN_PLAYER];
   const isMyTurn = game.currentPlayer === HUMAN_PLAYER;
 
+  const info = getStagingInfo();
+
   let html = "";
 
-  // Estado
   html += `
     <div class="status">
-      ${isMyTurn ? "🟢 Tu turno" : "⏳ Turno de IA..."}
+      ${isMyTurn ? "🟢 Tu turno" : "⏳ IA..."}
+    </div>
+  `;
+
+  // =======================
+  // STAGING
+  // =======================
+  html += `<h3>🧪 Preparando jugada</h3>`;
+  html += `<div class="staging">`;
+
+  staging.forEach((group, gIndex) => {
+    const state = info.details[gIndex];
+    const cls = state?.isValid ? "valid" : "invalid";
+
+    html += `
+      <div 
+        class="group staging-group ${cls}"
+        ondragover="onStagingDragOver(event, ${gIndex})"
+        ondrop="onDropToStaging(${gIndex})"
+      >
+    `;
+
+    group.forEach(card => {
+      html += `<span class="card">${card.value}${card.suit}</span>`;
+    });
+
+    html += `<div class="group-points">${state?.points || 0} pts</div>`;
+    html += `</div>`;
+  });
+
+  html += `
+    <div 
+      class="group staging-new"
+      ondragover="allowDrop(event)"
+      ondrop="createNewGroup()"
+    >
+      + Nuevo grupo
+    </div>
+  `;
+
+  html += `</div>`;
+
+  // resumen
+  html += `
+    <div class="staging-summary">
+      Total: ${info.total} / ${info.minRequired}
+      ${info.meetsTotal ? "✅" : "❌"}
     </div>
   `;
 
@@ -91,41 +120,15 @@ function render() {
   // =======================
   html += `<h3>🧩 Mesa</h3><div class="table">`;
 
-  table.forEach((group, gIndex) => {
-    const highlight = (hoverGroupIndex === gIndex) ? "highlight" : "";
-
-    html += `
-      <div 
-        class="group ${highlight}"
-        ondragover="onGroupDragOver(event, ${gIndex})"
-        ondragleave="onGroupLeave()"
-        ondrop="onDropToGroup(${gIndex})"
-      >
-    `;
-
+  table.forEach(group => {
+    html += `<div class="group">`;
     group.forEach(card => {
       html += `<span class="card">${card.value}${card.suit}</span>`;
     });
-
     html += `</div>`;
   });
 
   html += `</div>`;
-
-  // =======================
-  // DESCARTE
-  // =======================
-  const topDiscard = game.discard[game.discard.length - 1];
-  html += `
-    <div class="discard">
-      <strong>Descarte:</strong>
-      ${
-        topDiscard
-          ? `<span class="card">${topDiscard.value}${topDiscard.suit}</span>`
-          : "Vacío"
-      }
-    </div>
-  `;
 
   // =======================
   // MANO
@@ -133,14 +136,11 @@ function render() {
   html += `<h3>🃏 Tu mano</h3><div class="hand">`;
 
   hand.forEach((card, index) => {
-    const isSelected = selectedCards.includes(index);
-
     html += `
       <span 
-        class="card ${isSelected ? "selected" : ""}"
+        class="card"
         draggable="true"
         ondragstart="dragStart(${index})"
-        onclick="toggleSelect(${index})"
       >
         ${card.value}${card.suit}
       </span>
@@ -154,93 +154,76 @@ function render() {
   // =======================
   html += `
     <div class="controls">
-      <button onclick="drawDeck()" ${!isMyTurn ? "disabled" : ""}>Robar</button>
-      <button onclick="drawDiscard()" ${!isMyTurn ? "disabled" : ""}>Descarte</button>
-      <button onclick="playSelected()" ${!isMyTurn ? "disabled" : ""}>Bajar</button>
-      <button onclick="discardSelected()" ${!isMyTurn ? "disabled" : ""}>Descartar</button>
+      <button onclick="drawDeck()">Robar</button>
+      <button onclick="drawDiscard()">Descarte</button>
+      <button onclick="confirmPlay()" ${!info.valid ? "disabled" : ""}>
+        Confirmar jugada
+      </button>
+      <button onclick="cancelStaging()">Cancelar</button>
     </div>
   `;
 
   container.innerHTML = html;
-
-  // IA
-  if (!isMyTurn) {
-    setTimeout(playAITurn, 700);
-  }
 }
 
 // =======================
-// DRAG & DROP (MESA)
+// DRAG
 // =======================
 function dragStart(index) {
   draggedIndex = index;
 }
 
-function onGroupDragOver(e, groupIndex) {
+function allowDrop(e){
   e.preventDefault();
-
-  const card = game.players[HUMAN_PLAYER][draggedIndex];
-
-  if (canAttach(card, table[groupIndex])) {
-    hoverGroupIndex = groupIndex;
-  } else {
-    hoverGroupIndex = null;
-  }
-
-  render();
 }
 
-function onGroupLeave() {
-  hoverGroupIndex = null;
-  render();
-}
-
-function onDropToGroup(groupIndex) {
+function createNewGroup() {
   const hand = game.players[HUMAN_PLAYER];
-  const card = hand[draggedIndex];
-
-  if (attachToGroup(card, groupIndex)) {
-    hand.splice(draggedIndex, 1);
-  }
-
+  staging.push([hand[draggedIndex]]);
+  hand.splice(draggedIndex,1);
   draggedIndex = null;
-  hoverGroupIndex = null;
   render();
 }
 
-// =======================
-// SELECCIÓN
-// =======================
-function toggleSelect(index) {
-  if (selectedCards.includes(index)) {
-    selectedCards = selectedCards.filter(i => i !== index);
-  } else {
-    selectedCards.push(index);
-  }
-  render();
+function onStagingDragOver(e){
+  e.preventDefault();
 }
 
-// =======================
-// JUGAR
-// =======================
-function playSelected() {
+function onDropToStaging(groupIndex){
   const hand = game.players[HUMAN_PLAYER];
-  const cards = selectedCards.map(i => hand[i]);
-
-  if (cards.length >= 3 && game.isValidCombination(cards)) {
-    const success = game.open(HUMAN_PLAYER, [cards]);
-    if (success) {
-      table.push(cards);
-      selectedCards.sort((a,b)=>b-a).forEach(i => hand.splice(i,1));
-    }
-  }
-
-  selectedCards = [];
+  staging[groupIndex].push(hand[draggedIndex]);
+  hand.splice(draggedIndex,1);
+  draggedIndex = null;
   render();
 }
 
 // =======================
-// DESCARTE ESTRICTO
+// ACCIONES
+// =======================
+function confirmPlay() {
+  const info = getStagingInfo();
+
+  if (!info.valid) return;
+
+  const success = game.open(HUMAN_PLAYER, staging);
+  if (!success) return;
+
+  staging.forEach(g => table.push(g));
+  staging = [];
+  tookDiscard = false;
+
+  render();
+}
+
+function cancelStaging() {
+  const hand = game.players[HUMAN_PLAYER];
+  staging.flat().forEach(c => hand.push(c));
+  staging = [];
+  render();
+}
+
+// =======================
+// ROBO
 // =======================
 function drawDeck() {
   if (hasDrawn) return;
@@ -251,56 +234,9 @@ function drawDeck() {
 
 function drawDiscard() {
   if (hasDrawn) return;
-
   game.takeDiscard();
   hasDrawn = true;
   tookDiscard = true;
-  render();
-}
-
-function discardSelected() {
-  if (!hasDrawn) return;
-
-  if (tookDiscard) {
-    return alert("Debes bajar antes de descartar");
-  }
-
-  if (selectedCards.length !== 1) return;
-
-  game.discardCard(selectedCards[0]);
-
-  selectedCards = [];
-  hasDrawn = false;
-  tookDiscard = false;
-
-  render();
-}
-
-// =======================
-// IA (simplificada aquí)
-// =======================
-function playAITurn() {
-  const p = game.currentPlayer;
-  const hand = game.players[p];
-
-  game.drawFromDeck();
-
-  // pegar agresivo
-  for (let i = hand.length - 1; i >= 0; i--) {
-    for (let g = 0; g < table.length; g++) {
-      if (canAttach(hand[i], table[g])) {
-        table[g].push(hand[i]);
-        hand.splice(i,1);
-        break;
-      }
-    }
-  }
-
-  if (hand.length > 0) {
-    const idx = Math.floor(Math.random() * hand.length);
-    game.discardCard(idx);
-  }
-
   render();
 }
 
