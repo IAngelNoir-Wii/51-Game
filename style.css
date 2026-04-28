@@ -140,3 +140,16 @@ button:last-child:hover {
     margin: 5px 0;
   }
 }
+
+.group {
+  padding: 10px;
+  margin: 5px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.05);
+  display: inline-block;
+}
+
+.group.highlight {
+  background: rgba(76, 175, 80, 0.4);
+  box-shadow: 0 0 10px #4caf50;
+}
