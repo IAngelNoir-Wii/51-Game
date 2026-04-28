@@ -153,3 +153,23 @@ button:last-child:hover {
   background: rgba(76, 175, 80, 0.4);
   box-shadow: 0 0 10px #4caf50;
 }
+
+.staging {
+  margin: 10px 0;
+  padding: 10px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 10px;
+}
+
+.staging-group {
+  border: 2px dashed #4caf50;
+}
+
+.staging-new {
+  border: 2px dashed #aaa;
+  opacity: 0.6;
+}
+
+.staging-new:hover {
+  background: rgba(255,255,255,0.1);
+}
